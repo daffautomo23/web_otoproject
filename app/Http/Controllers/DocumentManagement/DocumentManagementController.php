@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 class DocumentManagementController extends Controller
 {
     /**
-     * Display a listing of folders
+     * Display a listing of root folders
      */
     public function index()
     {
@@ -22,6 +22,7 @@ class DocumentManagementController extends Controller
         
         $query = DocumentFolder::active()
             ->ordered()
+            ->whereNull('parent_folder_id')
             ->withCount('documents');
         
         // If user is not logged in, show only non-private folders
@@ -55,9 +56,115 @@ class DocumentManagementController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
+        // Load subfolders that the user can view
+        $subfolders = DocumentFolder::where('parent_folder_id', $folder->id)
+            ->where('is_active', true)
+            ->orderBy('order', 'asc')
+            ->withCount('documents')
+            ->get()
+            ->filter(fn($sub) => $sub->canUserView($currentUser))
+            ->values();
+
+        // Build breadcrumb trail
+        $breadcrumbs = [];
+        $current = $folder;
+        while ($current->parent_folder_id) {
+            $current->loadMissing('parent');
+            $current = $current->parent;
+            array_unshift($breadcrumbs, $current);
+        }
+
         $canManage = $currentUser ? $folder->canUserManage($currentUser) : false;
 
-        return view('document-management.folder', compact('folder', 'documents', 'canManage'));
+        return view('document-management.folder', compact('folder', 'documents', 'subfolders', 'breadcrumbs', 'canManage'));
+    }
+
+    /**
+     * Store a new subfolder inside an existing folder
+     */
+    public function storeSubfolder(Request $request, DocumentFolder $parentFolder)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini');
+        }
+
+        if (!$parentFolder->canUserManage($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengelola folder ini');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        // Generate a globally unique slug
+        $baseSlug = Str::slug($request->name);
+        $slug = $baseSlug;
+        $counter = 1;
+        while (DocumentFolder::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        DocumentFolder::create([
+            'parent_folder_id' => $parentFolder->id,
+            'name' => $request->name,
+            'slug' => $slug,
+            'description' => $request->description,
+            'icon' => 'folder',
+            'order' => DocumentFolder::where('parent_folder_id', $parentFolder->id)->max('order') + 1,
+            'is_active' => true,
+            'is_private' => false,
+            'department' => null,
+        ]);
+
+        return redirect()
+            ->route('document-management.folder', $parentFolder->slug)
+            ->with('success', 'Subfolder berhasil ditambahkan');
+    }
+
+    /**
+     * Delete a subfolder
+     */
+    public function destroySubfolder(DocumentFolder $subfolder)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini');
+        }
+
+        if (!$subfolder->canUserManage($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengelola folder ini');
+        }
+
+        if (!$subfolder->parent_folder_id) {
+            abort(400, 'Tidak dapat menghapus folder utama dari sini');
+        }
+
+        $parentFolder = $subfolder->parent;
+
+        if ($subfolder->documents()->count() > 0) {
+            return redirect()
+                ->route('document-management.folder', $parentFolder->slug)
+                ->with('error', 'Tidak bisa menghapus folder yang masih memiliki dokumen');
+        }
+
+        if ($subfolder->subfolders()->count() > 0) {
+            return redirect()
+                ->route('document-management.folder', $parentFolder->slug)
+                ->with('error', 'Tidak bisa menghapus folder yang masih memiliki subfolder');
+        }
+
+        $subfolder->delete();
+
+        return redirect()
+            ->route('document-management.folder', $parentFolder->slug)
+            ->with('success', 'Subfolder berhasil dihapus');
     }
 
     /**
@@ -390,6 +497,13 @@ class DocumentManagementController extends Controller
             return redirect()
                 ->route('document-management.manage-folders')
                 ->with('error', 'Tidak bisa menghapus folder yang masih memiliki dokumen');
+        }
+
+        // Check if folder has subfolders
+        if ($folder->subfolders()->count() > 0) {
+            return redirect()
+                ->route('document-management.manage-folders')
+                ->with('error', 'Tidak bisa menghapus folder yang masih memiliki subfolder');
         }
 
         $folder->delete();

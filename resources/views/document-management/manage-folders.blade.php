@@ -63,18 +63,18 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button type="button"
-                                                data-folder-id="{{ $folder->id }}"
+                                                data-folder-slug="{{ $folder->slug }}"
                                                 data-folder-name="{{ $folder->name }}"
                                                 data-folder-description="{{ $folder->description ?? '' }}"
                                                 data-folder-active="{{ $folder->is_active ? '1' : '0' }}"
                                                 data-folder-private="{{ $folder->is_private ? '1' : '0' }}"
                                                 data-folder-department="{{ $folder->department ?? '' }}"
-                                                onclick="editFolder(this.dataset.folderId, this.dataset.folderName, this.dataset.folderDescription, this.dataset.folderActive === '1', this.dataset.folderPrivate === '1', this.dataset.folderDepartment)" 
+                                                onclick="editFolder(this.dataset.folderSlug, this.dataset.folderName, this.dataset.folderDescription, this.dataset.folderActive === '1', this.dataset.folderPrivate === '1', this.dataset.folderDepartment)" 
                                                 class="text-yellow-600 hover:text-yellow-900 mr-3">
                                             Edit
                                         </button>
                                         @if($folder->documents_count == 0)
-                                            <form action="{{ route('document-management.folders.destroy', $folder->id) }}" 
+                                            <form action="{{ route('document-management.folders.destroy', $folder->slug) }}" 
                                                   method="POST" 
                                                   class="inline"
                                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus folder ini?')">
@@ -201,8 +201,8 @@
     </div>
 
     <script>
-        function editFolder(id, name, description, isActive, isPrivate, department) {
-            document.getElementById('editFolderForm').action = `/document-management/folders/${id}`;
+        function editFolder(slug, name, description, isActive, isPrivate, department) {
+            document.getElementById('editFolderForm').action = `/document-management/folders/${slug}`;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_description').value = description;
             document.getElementById('edit_is_active').checked = isActive;

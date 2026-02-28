@@ -188,6 +188,10 @@ Route::middleware(['auth'])->prefix('document-management')->name('document-manag
     Route::get('/documents/{document}/edit', [App\Http\Controllers\DocumentManagement\DocumentManagementController::class, 'edit'])->name('edit');
     Route::put('/documents/{document}', [App\Http\Controllers\DocumentManagement\DocumentManagementController::class, 'update'])->name('update');
     Route::delete('/documents/{document}', [App\Http\Controllers\DocumentManagement\DocumentManagementController::class, 'destroy'])->name('destroy');
+
+    // Subfolder CRUD (check permission in controller via canUserManage)
+    Route::post('/folder/{folder}/subfolders', [App\Http\Controllers\DocumentManagement\DocumentManagementController::class, 'storeSubfolder'])->name('subfolders.store');
+    Route::delete('/subfolders/{folder}', [App\Http\Controllers\DocumentManagement\DocumentManagementController::class, 'destroySubfolder'])->name('subfolders.destroy');
 });
 
 // Routes untuk Purchase Request

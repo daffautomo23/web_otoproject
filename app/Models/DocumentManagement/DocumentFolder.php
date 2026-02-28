@@ -10,6 +10,7 @@ class DocumentFolder extends Model
     use HasFactory;
 
     protected $fillable = [
+        'parent_folder_id',
         'name',
         'slug',
         'description',
@@ -25,6 +26,41 @@ class DocumentFolder extends Model
         'is_private' => 'boolean',
         'order' => 'integer',
     ];
+
+    /**
+     * Use slug as the route key for model binding
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
+     * Get the parent folder
+     */
+    public function parent()
+    {
+        return $this->belongsTo(DocumentFolder::class, 'parent_folder_id');
+    }
+
+    /**
+     * Get all direct subfolders
+     */
+    public function subfolders()
+    {
+        return $this->hasMany(DocumentFolder::class, 'parent_folder_id')->where('is_active', true)->orderBy('order', 'asc');
+    }
+
+    /**
+     * Recursively get the root (top-level) folder
+     */
+    public function getRootFolder()
+    {
+        if (!$this->parent_folder_id) {
+            return $this;
+        }
+        return $this->parent->getRootFolder();
+    }
 
     /**
      * Get all documents in this folder
@@ -74,6 +110,11 @@ class DocumentFolder extends Model
      */
     public function canUserManage($user)
     {
+        // If this is a subfolder, delegate to root folder's settings
+        if ($this->parent_folder_id) {
+            return $this->getRootFolder()->canUserManage($user);
+        }
+
         // Admin always can manage
         if ($user->hasAccess('dokumen_manajemen_admin')) {
             return true;
@@ -100,6 +141,11 @@ class DocumentFolder extends Model
      */
     public function canUserView($user)
     {
+        // If this is a subfolder, delegate to root folder's settings
+        if ($this->parent_folder_id) {
+            return $this->getRootFolder()->canUserView($user);
+        }
+
         // Admin always can view
         if ($user->hasAccess('dokumen_manajemen_admin')) {
             return true;
