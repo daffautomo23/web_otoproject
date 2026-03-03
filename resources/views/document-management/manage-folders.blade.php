@@ -69,7 +69,8 @@
                                                 data-folder-active="{{ $folder->is_active ? '1' : '0' }}"
                                                 data-folder-private="{{ $folder->is_private ? '1' : '0' }}"
                                                 data-folder-department="{{ $folder->department ?? '' }}"
-                                                onclick="editFolder(this.dataset.folderSlug, this.dataset.folderName, this.dataset.folderDescription, this.dataset.folderActive === '1', this.dataset.folderPrivate === '1', this.dataset.folderDepartment)" 
+                                                data-folder-update-url="{{ route('document-management.folders.update', $folder->slug) }}"
+                                                onclick="editFolder(this.dataset.folderSlug, this.dataset.folderName, this.dataset.folderDescription, this.dataset.folderActive === '1', this.dataset.folderPrivate === '1', this.dataset.folderDepartment, this.dataset.folderUpdateUrl)" 
                                                 class="text-yellow-600 hover:text-yellow-900 mr-3">
                                             Edit
                                         </button>
@@ -201,8 +202,8 @@
     </div>
 
     <script>
-        function editFolder(slug, name, description, isActive, isPrivate, department) {
-            document.getElementById('editFolderForm').action = `/document-management/folders/${slug}`;
+        function editFolder(slug, name, description, isActive, isPrivate, department, updateUrl) {
+            document.getElementById('editFolderForm').action = updateUrl;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_description').value = description;
             document.getElementById('edit_is_active').checked = isActive;
