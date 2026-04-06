@@ -18,13 +18,13 @@ class ProductOdooController extends Controller
                 'url' => 'https://odoo-pis.otoproject.id',
                 'db' => 'IOT-Odoo-Otoproject-PIS',
                 'username' => 'bod@otoproject.id', // Ganti dengan username Odoo Anda
-                'password' => 'otoprojectauto', // Ganti dengan password Odoo Anda
+                'password' => 'OTOPROJECTAUTO', // Ganti dengan password Odoo Anda
             ],
             'MMI' => [
                 'url' => 'https://odoo-mmi.otoproject.id',
                 'db' => 'IOT-Odoo-Otoproject-MMI',
                 'username' => 'bod@otoproject.id', // Ganti dengan username Odoo Anda
-                'password' => 'otoprojectauto', // Ganti dengan password Odoo Anda
+                'password' => 'OTOPROJECTAUTO', // Ganti dengan password Odoo Anda
             ],
         ];
         $products = [];
@@ -55,13 +55,13 @@ class ProductOdooController extends Controller
                 'url' => 'https://odoo-pis.otoproject.id',
                 'db' => 'IOT-Odoo-Otoproject-PIS',
                 'username' => 'bod@otoproject.id',
-                'password' => 'otoprojectauto',
+                'password' => 'OTOPROJECTAUTO',
             ],
             'MMI' => [
                 'url' => 'https://odoo-mmi.otoproject.id',
                 'db' => 'IOT-Odoo-Otoproject-MMI',
                 'username' => 'bod@otoproject.id',
-                'password' => 'otoprojectauto',
+                'password' => 'OTOPROJECTAUTO',
             ],
         ];
         if (!isset($configs[$db])) abort(404);
