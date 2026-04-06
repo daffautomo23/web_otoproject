@@ -35,13 +35,13 @@ class ProductSearchController extends Controller
                     'url' => 'https://odoo-pis.otoproject.id',
                     'db' => 'IOT-Odoo-Otoproject-PIS',
                     'username' => 'bod@otoproject.id',
-                    'password' => 'autokeren',
+                    'password' => 'otoprojectauto',
                 ],
                 'MMI' => [
                     'url' => 'https://odoo-mmi.otoproject.id',
                     'db' => 'IOT-Odoo-Otoproject-MMI',
                     'username' => 'bod@otoproject.id',
-                    'password' => 'autokeren',
+                    'password' => 'otoprojectauto',
                 ],
             ];
 
